@@ -8,7 +8,7 @@
   <video id="localVideo" autoplay playsinline style="width:80%;border-radius:10px;box-shadow:0 0 20px #00bfff;"></video>
 
   <script>
-    const ws = new WebSocket("ws://192.168.1.9:8080/sender"); // CHANGE THIS!
+    const ws = new WebSocket("ws://192.168.56.1:8080/sender"); // CHANGE THIS!
     const video = document.getElementById("localVideo");
 
     let pc;
