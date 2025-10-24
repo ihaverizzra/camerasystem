@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Camera Sender</title>
+</head>
+<body style="text-align:center;background:#111;color:white;font-family:sans-serif">
+  <h1>📷 Camera Sender</h1>
+  <video id="localVideo" autoplay playsinline style="width:80%;border-radius:10px;box-shadow:0 0 20px #00bfff;"></video>
+
+  <script>
+    const ws = new WebSocket("ws://YOUR_COMPUTER_IP:8080/sender"); // CHANGE THIS!
+    const video = document.getElementById("localVideo");
+
+    let pc;
+
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+
+      pc = new RTCPeerConnection();
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+      pc.onicecandidate = e => {
+        if (e.candidate) ws.send(JSON.stringify({ ice: e.candidate }));
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      ws.send(JSON.stringify({ offer }));
+
+      ws.onmessage = async e => {
+        const data = JSON.parse(e.data);
+        if (data.answer) {
+          await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+          console.log("✅ Connected to viewer!");
+        } else if (data.ice) {
+          await pc.addIceCandidate(data.ice);
+        }
+      };
+    }
+
+    ws.onopen = startCamera;
+  </script>
+</body>
+</html>
